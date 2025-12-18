@@ -104,10 +104,23 @@ if st.session_state.selected_project_id is None:
         all_projects = fetch_projects_with_annotations(syn)
 
     if all_projects:
-        # Create searchable/filterable project list
-        search = st.text_input(
-            "🔍 Search challenge projects", placeholder="Type to filter..."
-        )
+        # Search and sorting controls
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            search = st.text_input(
+                "🔍 Search challenge projects", placeholder="Type to filter..."
+            )
+        with col2:
+            sort_by = st.selectbox(
+                "Sort by",
+                options=[
+                    "Editable First",
+                    "Name (A-Z)",
+                    "Name (Z-A)",
+                    "Has Annotations",
+                ],
+                index=0,
+            )
 
         # Filter projects based on search
         if search:
@@ -119,6 +132,25 @@ if st.session_state.selected_project_id is None:
             ]
         else:
             table_data = all_projects
+
+        # Sort projects based on selection
+        if sort_by == "Editable First":
+            # Editable projects first, then by name
+            table_data = sorted(
+                table_data, key=lambda x: (not x["Can Edit"], x["Project Name"].lower())
+            )
+        elif sort_by == "Name (A-Z)":
+            table_data = sorted(table_data, key=lambda x: x["Project Name"].lower())
+        elif sort_by == "Name (Z-A)":
+            table_data = sorted(
+                table_data, key=lambda x: x["Project Name"].lower(), reverse=True
+            )
+        elif sort_by == "Has Annotations":
+            # Projects with annotations first, then by name
+            table_data = sorted(
+                table_data,
+                key=lambda x: (not x["Has Annotations"], x["Project Name"].lower()),
+            )
 
         if not table_data:
             st.warning("No challenge projects match your search.")
