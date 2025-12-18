@@ -78,11 +78,22 @@ def fetch_project_folders(syn_client, project_id):
         return []
 
 
-def fetch_folder_files(syn_client, folder_id):
-    """Get a list of files within a specific folder."""
+def fetch_folder_contents(syn_client, folder_id):
+    """Get a list of files and sub-folders within a specific folder."""
     try:
-        return list(syn_client.getChildren(folder_id, includeTypes=["file"]))
+        return list(syn_client.getChildren(folder_id, includeTypes=["file", "folder"]))
     except Exception:
+        return []
+
+
+def fetch_project_tables(syn_client, project_id):
+    """Get a list of tables and views within the project."""
+    try:
+        return list(
+            syn_client.getChildren(project_id, includeTypes=["table", "entityview"])
+        )
+    except Exception as e:
+        st.warning(f"Could not fetch tables: {e}")
         return []
 
 

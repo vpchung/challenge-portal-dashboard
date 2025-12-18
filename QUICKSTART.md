@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Get up and running with the Synapse Wiki Annotator in 5 minutes!
+Get up and running with the Challenge Annotator in 5 minutes!
 
 ## Step 1: Install Python Dependencies
 

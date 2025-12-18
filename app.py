@@ -283,7 +283,9 @@ if not can_edit:
 with st.sidebar:
     st.markdown("---")
     st.markdown("### 🧭 Navigation")
-    resource_type = st.radio("Select Resource Type:", ["Wiki Pages", "Folders"])
+    resource_type = st.radio(
+        "Select Resource Type:", ["Wiki Pages", "Folders", "Tables"]
+    )
 
     selected_item_id = None
     selected_item_title = None
@@ -305,6 +307,15 @@ with st.sidebar:
             folder_map = {f"{f['name']} ({f['id']})": f["id"] for f in folders}
             selected_item_title = st.radio("Select Folder:", options=folder_map.keys())
             selected_item_id = folder_map[selected_item_title]
+
+    elif resource_type == "Tables":
+        tables = service.fetch_project_tables(syn, project_id)
+        if not tables:
+            st.warning("No tables found.")
+        else:
+            table_map = {f"{t['name']} ({t['id']})": t["id"] for t in tables}
+            selected_item_title = st.radio("Select Table:", options=table_map.keys())
+            selected_item_id = table_map[selected_item_title]
 
 # ------------------------------------------------------------------
 # 9. Main Content
@@ -343,22 +354,38 @@ with left_col:
             f"[View on Synapse Web](https://www.synapse.org/Synapse:{selected_item_id})"
         )
 
-        st.divider()
-        st.markdown("### 📄 Files in this Folder")
-        with st.spinner("Fetching files..."):
-            folder_files = service.fetch_folder_files(syn, selected_item_id)
+        # --- Check for Folder Wiki (README) ---
+        folder_wiki_headers = service.fetch_wiki_headers(syn, selected_item_id)
+        if folder_wiki_headers:
+            with st.expander("📖 Folder Wiki", expanded=True):
+                with st.spinner("Loading folder wiki..."):
+                    folder_wiki = service.fetch_wiki_page(syn, selected_item_id, None)
+                    if folder_wiki:
+                        st.markdown(folder_wiki.markdown)
 
-        if folder_files:
-            files_data = [
-                {
-                    "Name": f.get("name"),
-                    "ID": f.get("id"),
-                    "Created": f.get("createdOn"),
-                }
-                for f in folder_files
-            ]
+        st.divider()
+        st.markdown("### 📂 Folder Contents")
+        with st.spinner("Fetching contents..."):
+            folder_contents = service.fetch_folder_contents(syn, selected_item_id)
+
+        if folder_contents:
+            content_data = []
+            for item in folder_contents:
+                # Check type for icon
+                is_folder = "Folder" in item.get("type", "")
+                icon = "📂" if is_folder else "📄"
+
+                content_data.append(
+                    {
+                        "": icon,
+                        "Name": item.get("name", "Unknown"),
+                        "ID": item.get("id", "Unknown"),
+                        "Created": item.get("createdOn", "Unknown"),
+                    }
+                )
+
             st.dataframe(
-                pd.DataFrame(files_data), use_container_width=True, hide_index=True
+                pd.DataFrame(content_data), use_container_width=True, hide_index=True
             )
         else:
             st.info("This folder is empty.")
@@ -366,6 +393,20 @@ with left_col:
         default_anno_key = "DataFolder"
         default_anno_val = selected_item_id
         form_help_text = "Link this Folder to the Project."
+
+    elif resource_type == "Tables":
+        st.subheader(f"Table: {selected_item_title}")
+        st.markdown(f"**Synapse ID:** `{selected_item_id}`")
+        st.markdown(
+            f"[View on Synapse Web](https://www.synapse.org/Synapse:{selected_item_id})"
+        )
+
+        # Currently just showing basic info, but could be expanded to show columns or query data
+        st.info("Select this table to annotate it as a challenge resource.")
+
+        default_anno_key = "ChallengeTable"
+        default_anno_val = selected_item_id
+        form_help_text = "Link this Table to the Project."
 
 # --- RENDER ANNOTATION FORM ---
 with right_col:
