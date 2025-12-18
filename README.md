@@ -107,12 +107,6 @@ The app queries a specific Synapse table view (default: `syn51476218`). To use a
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-### Adding New Features
-
-- **UI Components**: Add to `src/page_components.py`
-- **Synapse API calls**: Add to `src/synapse_service.py`
-- **New pages**: Create files in a `pages/` directory for multi-page apps
-
 ## Acknowledgments
 
 Built with:
