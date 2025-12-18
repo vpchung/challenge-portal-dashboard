@@ -1,4 +1,4 @@
-# Synapse Wiki Annotator
+# Challenge Annotator
 
 > [!NOTE]
 > This project was created as part of the Sage Hackathon 2025, and may not be maintained moving forward.
